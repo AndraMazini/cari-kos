@@ -8,3 +8,10 @@ Route::get('/', function () {
 });
 
 Route::get('/', [HomeController::class, 'index']);
+
+use App\Http\Controllers\TransactionController;
+Route::middleware('auth')->group(function () {
+    Route::post('/booking/{boardingHouse}', 
+        [TransactionController::class, 'store']
+    )->name('booking.store');
+});

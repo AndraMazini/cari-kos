@@ -7,6 +7,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+ Auth
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -18,3 +19,13 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+Route::get('/', [HomeController::class, 'index']);
+
+use App\Http\Controllers\TransactionController;
+Route::middleware('auth')->group(function () {
+    Route::post('/booking/{boardingHouse}', 
+        [TransactionController::class, 'store']
+    )->name('booking.store');
+});
+ halaman_home

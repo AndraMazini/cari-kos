@@ -14,13 +14,25 @@
             <p class="text-gray-500 text-sm">Mulai cari kos impianmu sekarang</p>
         </div>
         
+        @if($errors->any())
+            <div class="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm border border-red-100">
+                <div class="font-bold flex items-center mb-1">
+                    <i class="fa-solid fa-circle-exclamation mr-2"></i> Ada Kesalahan:
+                </div>
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <form action="{{ route('register.store') }}" method="POST">
             @csrf
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-user"></i></span>
-                    <input type="text" name="name" class="w-full pl-10 border border-gray-300 rounded-lg px-3 py-2 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" placeholder="Jhon Doe" required>
+                    <input type="text" name="name" value="{{ old('name') }}" class="w-full pl-10 border border-gray-300 rounded-lg px-3 py-2 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" placeholder="Jhon Doe" required>
                 </div>
             </div>
 
@@ -28,7 +40,7 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-envelope"></i></span>
-                    <input type="email" name="email" class="w-full pl-10 border border-gray-300 rounded-lg px-3 py-2 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" placeholder="email@contoh.com" required>
+                    <input type="email" name="email" value="{{ old('email') }}" class="w-full pl-10 border border-gray-300 rounded-lg px-3 py-2 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" placeholder="email@contoh.com" required>
                 </div>
             </div>
 

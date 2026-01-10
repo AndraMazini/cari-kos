@@ -11,10 +11,21 @@
 
     <nav class="bg-white shadow p-4 mb-8">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="font-bold text-xl text-green-600"><i class="fa-solid fa-house-laptop"></i> Juragan Area</h1>
-            <a href="{{ route('home') }}" class="text-sm text-gray-500 hover:text-green-600 font-bold">
-                <i class="fa-solid fa-arrow-left"></i> Kembali ke Website
-            </a>
+            <div class="flex items-center gap-4">
+                <h1 class="font-bold text-xl text-green-600"><i class="fa-solid fa-house-laptop"></i> Juragan Area</h1>
+                <div class="hidden md:flex gap-4 ml-8 text-sm font-medium">
+                    <a href="{{ route('owner.dashboard') }}" class="text-gray-500 hover:text-green-600 transition">Dashboard</a>
+                    <a href="{{ route('owner.kos.index') }}" class="text-green-600 border-b-2 border-green-600 pb-1">Kelola Kos</a>
+                    <a href="{{ route('owner.transactions.index') }}" class="text-gray-500 hover:text-green-600 transition">Data Penyewa</a>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <span class="hidden md:inline text-sm font-bold text-gray-700">Halo, {{ Auth::user()->name }}</span>
+                <a href="{{ route('home') }}" class="text-sm text-gray-500 hover:text-green-600 font-bold" title="Ke Halaman Utama">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -67,7 +78,7 @@
                                 <i class="fa-solid fa-door-open"></i> Atur Kamar
                             </a>
                             
-                            <a href="#" class="text-gray-400 hover:text-gray-600 cursor-not-allowed">
+                            <a href="#" class="text-gray-400 hover:text-gray-600 cursor-not-allowed" title="Edit Kos (Segera Hadir)">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
                         </td>

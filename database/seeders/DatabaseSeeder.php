@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Buat User ADMIN (Real Admin untuk Dashboard)
+        // 1. Buat User ADMIN
         User::create([
             'name' => 'Super Admin',
             'username' => 'superadmin',

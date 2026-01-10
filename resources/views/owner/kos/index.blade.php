@@ -59,11 +59,16 @@
                             Rp{{ number_format($kos->price_start_from, 0, ',', '.') }}
                         </td>
                         <td class="px-6 py-4 text-sm font-medium">
-                            <a href="{{ route('kos.show', $kos->slug) }}" target="_blank" class="text-blue-600 hover:text-blue-900 mr-4 font-bold">
-                                <i class="fa-solid fa-eye"></i> Lihat
+                            <a href="{{ route('kos.show', $kos->slug) }}" target="_blank" class="text-blue-600 hover:text-blue-900 mr-3" title="Lihat di Web">
+                                <i class="fa-solid fa-eye"></i>
                             </a>
-                            <a href="#" class="text-gray-400 hover:text-gray-600 cursor-not-allowed" title="Fitur Edit belum tersedia">
-                                <i class="fa-solid fa-pen-to-square"></i> Edit
+
+                            <a href="{{ route('owner.rooms.index', $kos->slug) }}" class="text-orange-600 hover:text-orange-900 mr-3 font-bold" title="Kelola Kamar">
+                                <i class="fa-solid fa-door-open"></i> Atur Kamar
+                            </a>
+                            
+                            <a href="#" class="text-gray-400 hover:text-gray-600 cursor-not-allowed">
+                                <i class="fa-solid fa-pen-to-square"></i>
                             </a>
                         </td>
                     </tr>

@@ -8,32 +8,44 @@ use App\Models\City;
 use App\Models\Facility;
 use App\Models\BoardingHouse;
 use App\Models\Room;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Buat User Admin/Pemilik
-        $user = User::create([
+        // 1. Buat User ADMIN (Real Admin untuk Dashboard)
+        User::create([
+            'name' => 'Super Admin',
+            'username' => 'superadmin',
+            'email' => 'super@mamikos.local',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+            'phone_number' => '08000000000',
+        ]);
+
+        // 2. Buat User Pemilik Kos
+        $owner = User::create([
             'name' => 'Juragan Kos',
-            'username' => 'juragankos', // <--- TAMBAHAN BARU
+            'username' => 'juragankos',
             'email' => 'admin@mamikos.local',
-            'password' => bcrypt('password'),
+            'password' => Hash::make('password'),
             'role' => 'pemilik',
             'phone_number' => '081234567890',
         ]);
 
-        // 2. Buat Data Pencari Kos
+        // 3. Buat User Pencari Kos
         User::create([
             'name' => 'Anak Rantau',
-            'username' => 'anakrantau', // <--- TAMBAHAN BARU
+            'username' => 'anakrantau',
             'email' => 'user@mamikos.local',
-            'password' => bcrypt('password'),
-            'role' => 'pencari',
+            'password' => Hash::make('password'),
+            'role' => 'penyewa',
+            'phone_number' => '08987654321',
         ]);
 
-        // 3. Buat Data Kota
+        // 4. Buat Data Kota
         $cities = [
             ['name' => 'Jakarta', 'slug' => 'jakarta'],
             ['name' => 'Bandung', 'slug' => 'bandung'],
@@ -46,7 +58,7 @@ class DatabaseSeeder extends Seeder
             City::create($city);
         }
 
-        // 4. Buat Data Fasilitas
+        // 5. Buat Data Fasilitas
         $facilities = [
             'WiFi', 'AC', 'Kamar Mandi Dalam', 'Kasur', 'Lemari', 
             'Meja Belajar', 'Parkir Motor', 'Parkir Mobil', 'Dapur Umum'
@@ -54,11 +66,14 @@ class DatabaseSeeder extends Seeder
         
         $facilityIds = [];
         foreach ($facilities as $f) {
-            $fac = Facility::create(['name' => $f]);
+            $fac = Facility::create([
+                'name' => $f,
+                'icon' => 'fa-solid fa-check'
+            ]);
             $facilityIds[] = $fac->id;
         }
 
-        // 5. Buat Dummy Boarding House (Kos-kosan)
+        // 6. Buat Dummy Boarding House
         $kosNames = [
             'Kost Griya Melati', 'Kost Dago Asri', 'Kost Putri Sakinah', 
             'Apartemen Siswa', 'Kost Eksklusif Menteng', 'Wisma Mahasiswa', 
@@ -72,20 +87,22 @@ class DatabaseSeeder extends Seeder
             $kos = BoardingHouse::create([
                 'name' => $name,
                 'slug' => Str::slug($name) . '-' . Str::random(5),
-                'user_id' => $user->id,
+                'user_id' => $owner->id, 
                 'city_id' => $city->id,
                 'address' => 'Jl. ' . $name . ' No. ' . rand(1, 100) . ', ' . $city->name,
                 'category' => $category,
-                'description' => 'Kos nyaman, aman, dan strategis dekat kampus. Cocok untuk mahasiswa dan karyawan.',
+                'description' => 'Kos nyaman, aman, dan strategis dekat kampus.',
                 'price_start_from' => rand(5, 25) * 100000,
                 'thumbnail' => null,
             ]);
 
             // Attach Fasilitas
-            $randomFacilities = collect($facilityIds)->random(rand(3, 5));
-            $kos->facilities()->attach($randomFacilities);
+            if (!empty($facilityIds)) {
+                $randomFacilities = collect($facilityIds)->random(min(count($facilityIds), rand(3, 5)));
+                $kos->facilities()->attach($randomFacilities);
+            }
 
-            // 6. Buat Kamar
+            // 7. Buat Kamar
             for ($i = 1; $i <= rand(2, 4); $i++) {
                 Room::create([
                     'boarding_house_id' => $kos->id,

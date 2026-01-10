@@ -14,12 +14,14 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('username')->unique(); // Syarat Tugas: Username Unik
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->string('role')->default('pencari'); // admin, pemilik, pencari
+            // --- KOLOM BARU ---
+            $table->string('username')->unique()->nullable();
             $table->string('phone_number')->nullable();
-            $table->string('avatar')->nullable();
+            // ------------------
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->enum('role', ['admin', 'pemilik', 'penyewa'])->default('penyewa');
             $table->rememberToken();
             $table->timestamps();
         });

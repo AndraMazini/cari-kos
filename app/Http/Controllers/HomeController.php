@@ -4,31 +4,60 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\BoardingHouse;
+use App\Models\City; // Tambahkan ini
 
 class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        // Mulai query dengan eager loading relasi agar efisien
-        $query = BoardingHouse::with(['city', 'rooms']);
+        // 1. Ambil data kota untuk dropdown filter
+        $cities = City::all();
 
-        // Logika Pencarian: Jika ada input 'search'
-        if ($request->has('search') && $request->search != '') {
+        // 2. Mulai Query dengan Eager Loading & Count Rooms
+        // withCount('rooms') akan otomatis membuat properti 'rooms_count'
+        $query = BoardingHouse::with(['city', 'facilities'])
+                  ->withCount(['rooms' => function ($query) {
+                      $query->where('is_available', true); // Hitung cuma kamar yang tersedia
+                  }]);
+
+        // 3. Logika Pencarian (Keyword)
+        if ($request->filled('search')) {
             $search = $request->search;
-            
             $query->where(function($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')       // Cari nama kos
-                  ->orWhere('address', 'like', '%' . $search . '%')  // Cari alamat
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('address', 'like', '%' . $search . '%')
                   ->orWhereHas('city', function($c) use ($search) {
-                      $c->where('name', 'like', '%' . $search . '%'); // Cari nama kota
+                      $c->where('name', 'like', '%' . $search . '%');
                   });
             });
         }
 
-        // Ambil hasil data
+        // 4. Logika Filter Kota
+        if ($request->filled('city_id')) {
+            $query->where('city_id', $request->city_id);
+        }
+
+        // 5. Logika Filter Kategori (Putra/Putri)
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        // 6. Logika Sorting Harga
+        if ($request->filled('sort')) {
+            if ($request->sort == 'lowest') {
+                $query->orderBy('price_start_from', 'asc');
+            } elseif ($request->sort == 'highest') {
+                $query->orderBy('price_start_from', 'desc');
+            }
+        } else {
+            // Default urutkan dari yang terbaru
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // 7. Eksekusi
         $kosList = $query->get();
 
-        return view('home', compact('kosList'));
+        return view('home', compact('kosList', 'cities'));
     }
 
     public function show($slug)

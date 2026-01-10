@@ -12,15 +12,22 @@
     <nav class="bg-white shadow px-6 py-4 mb-8">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <h1 class="text-xl font-bold text-gray-800">Admin Juragan Kos</h1>
-            <a href="{{ route('home') }}" class="text-sm text-gray-500 hover:text-green-600">Lihat Website Utama</a>
+            
+            <a href="{{ route('admin.dashboard') }}" class="text-sm text-gray-500 hover:text-green-600 font-bold">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Dashboard
+            </a>
+            
         </div>
     </nav>
 
     <div class="max-w-7xl mx-auto px-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Daftar Transaksi Masuk</h2>
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Daftar Semua Transaksi</h2>
 
         @if(session('success'))
             <div class="bg-green-100 text-green-700 p-4 rounded mb-4">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">{{ session('error') }}</div>
         @endif
 
         <div class="bg-white rounded-xl shadow overflow-hidden">
@@ -35,7 +42,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($transactions as $trx)
+                    @forelse($transactions as $trx)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="font-bold text-gray-800">{{ $trx->code }}</span><br>
@@ -84,7 +91,11 @@
                             @endif
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">Tidak ada data transaksi.</td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

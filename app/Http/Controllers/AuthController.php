@@ -17,30 +17,25 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        // Validasi Input
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6|confirmed', // Pastikan form punya name="password_confirmation"
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            // FIX: Pastikan validasi sesuai enum di database ('penyewa' dan 'pemilik')
+            'role'     => 'required|in:penyewa,pemilik', 
         ]);
 
-        // FITUR BARU: Generate Username Otomatis
-        // Contoh: Nama "Rafly Alfazari" -> Username "raflyalfazari123"
-        $generatedUsername = str_replace(' ', '', strtolower($request->name)) . rand(100, 999);
-
+        // Simpan User Baru
         User::create([
-            'name' => $request->name,
-            'username' => $generatedUsername, // <-- Masukkan username otomatis
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'pencari', // Default role untuk user baru
+            'role'     => $request->role,
         ]);
 
-        // Langsung Login setelah daftar
-        if (Auth::attempt($request->only('email', 'password'))) {
-            return redirect()->route('home')->with('success', 'Akun berhasil dibuat!');
-        }
-
-        return redirect()->route('login');
+        // Redirect ke Login dengan pesan sukses
+        return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
     }
 
     // --- LOGIN ---
@@ -51,19 +46,29 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required'
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'))) {
+        if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/')->with('success', 'Berhasil Login!');
+
+            // Cek Role dan Redirect ke halaman yang sesuai
+            $role = Auth::user()->role;
+
+            if ($role === 'admin') {
+                return redirect()->route('admin.dashboard'); // Ke Dashboard Admin
+            } elseif ($role === 'pemilik') {
+                return redirect()->route('owner.kos.index'); // Ke Halaman Pemilik
+            } else {
+                return redirect()->route('home'); // Ke Halaman Depan (Penyewa)
+            }
         }
 
         return back()->withErrors([
             'email' => 'Email atau password salah.',
-        ]);
+        ])->onlyInput('email');
     }
 
     // --- LOGOUT ---
@@ -72,6 +77,6 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/')->with('success', 'Berhasil Logout.');
+        return redirect('/');
     }
 }

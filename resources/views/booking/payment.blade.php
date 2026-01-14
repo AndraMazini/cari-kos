@@ -3,150 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pembayaran - {{ $transaction->code }}</title>
+    <title>Pembayaran</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 min-h-screen py-10">
+<body class="bg-gray-50">
 
-    <div class="max-w-xl mx-auto px-4">
+    <main class="max-w-xl mx-auto p-4 py-8">
         
-        @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong class="font-bold">Berhasil!</strong>
-            <span class="block sm:inline">{{ session('success') }}</span>
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 text-center">
+            <h1 class="text-orange-700 font-bold text-lg mb-1"><i class="fa-regular fa-clock"></i> Menunggu Pembayaran</h1>
+            <p class="text-sm text-orange-600">Selesaikan pembayaran sebelum 24 jam.</p>
         </div>
-        @endif
 
-        @if ($errors->any())
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-            <strong class="font-bold">Gagal Upload!</strong>
-            <ul class="list-disc pl-5 mt-1 text-sm">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
-
-        <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
-            <div class="text-center mb-8">
-                @if($transaction->status == 'pending')
-                    <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-clock text-2xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800">Menunggu Pembayaran</h2>
-                @elseif($transaction->status == 'paid')
-                     <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-hourglass-half text-2xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800">Menunggu Konfirmasi</h2>
-                @else
-                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-check text-2xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800">Sewamu Aktif!</h2>
-                @endif
-                
-                <p class="text-gray-500 mt-2">Kode Booking: <span class="font-mono font-bold text-black">{{ $transaction->code }}</span></p>
-            </div>
-
-            <div class="bg-gray-50 p-6 rounded-lg border border-dashed border-gray-300 mb-6">
-                <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-4">
-                    <div class="text-left">
-                        <h3 class="font-bold text-gray-800">{{ $transaction->room->boardingHouse->name }}</h3>
-                        <p class="text-sm text-gray-500">{{ $transaction->room->name }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs text-gray-500">Durasi</p>
-                        <p class="font-semibold">{{ $transaction->duration }} Bulan</p>
-                    </div>
-                </div>
-                
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <p class="text-sm text-gray-500 mb-1">Total Tagihan</p>
                 <div class="flex justify-between items-center">
-                    <p class="text-gray-600 font-medium">Total Tagihan</p>
-                    <p class="text-2xl font-bold text-green-600">Rp{{ number_format($transaction->total_amount, 0, ',', '.') }}</p>
+                    <h2 class="text-3xl font-bold text-gray-800">Rp{{ number_format($transaction->total_amount, 0, ',', '.') }}</h2>
+                    <button onclick="navigator.clipboard.writeText('{{ $transaction->total_amount }}'); alert('Nominal disalin!')" class="text-green-600 text-sm font-bold hover:underline">
+                        Salin
+                    </button>
                 </div>
             </div>
 
-            @if($transaction->status == 'pending')
-                <div class="mb-6">
-                    <h3 class="font-bold text-gray-800 mb-2">Instruksi Pembayaran</h3>
-                    <p class="text-sm text-gray-600 mb-4">Silakan transfer sesuai metode yang Anda pilih:</p>
-
-                    <div class="flex items-center gap-3 bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
-                        @if($transaction->payment_method == 'transfer_bca')
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg" class="h-10"> 
-                            <div>
-                                <p class="font-bold text-lg text-gray-800">123-456-7890</p>
-                                <p class="text-sm text-gray-500">Bank BCA a.n Juragan Kos</p>
-                            </div>
-                        @elseif($transaction->payment_method == 'transfer_bri')
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/BANK_BRI_logo.svg" class="h-10"> 
-                            <div>
-                                <p class="font-bold text-lg text-gray-800">002-999-888-777</p>
-                                <p class="text-sm text-gray-500">Bank BRI a.n Juragan Kos</p>
-                            </div>
-                        @elseif($transaction->payment_method == 'ewallet_gopay')
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Gopay_logo.svg" class="h-10"> 
-                            <div>
-                                <p class="font-bold text-lg text-gray-800">0812-3456-7890</p>
-                                <p class="text-sm text-gray-500">GoPay a.n Juragan Kos</p>
-                            </div>
-                        @else
-                            <p class="text-gray-800 font-bold">Rekening Belum Dipilih</p>
+            <div class="p-6 bg-gray-50">
+                <p class="text-sm font-bold text-gray-700 mb-3">Transfer ke {{ $transaction->payment_method }}:</p>
+                
+                <div class="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        @if($transaction->payment_method == 'BCA')
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg" class="h-6 w-auto">
+                        @elseif($transaction->payment_method == 'BRI')
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/BANK_BRI_logo.svg" class="h-6 w-auto">
+                        @elseif($transaction->payment_method == 'MANDIRI')
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg" class="h-6 w-auto">
+                        @elseif($transaction->payment_method == 'DANA')
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/72/Logo_dana_blue.svg" class="h-6 w-auto">
+                        @elseif($transaction->payment_method == 'GOPAY')
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Gopay_logo.svg" class="h-6 w-auto">
                         @endif
-                    </div>
 
-                    <form action="{{ route('booking.update', $transaction->code) }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
-                        
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload Bukti Transfer</label>
-                        <input type="file" name="payment_proof" required class="block w-full text-sm text-gray-500
-                            file:mr-4 file:py-2 file:px-4
-                            file:rounded-full file:border-0
-                            file:text-sm file:font-semibold
-                            file:bg-green-50 file:text-green-700
-                            hover:file:bg-green-100 mb-4
-                            cursor-pointer border border-gray-300 rounded-lg
-                        "/>
-                        <p class="text-xs text-gray-400 mb-4">*Format: JPG, PNG. Maks: 2MB</p>
-                        
-                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition shadow-lg shadow-green-200">
-                            <i class="fa-solid fa-upload mr-2"></i> Kirim Bukti Pembayaran
-                        </button>
-                    </form>
+                        <div>
+                            @php
+                                $rek = '';
+                                $nama = 'PT Juragan Kos Indonesia'; // Nama Default
+                                switch($transaction->payment_method) {
+                                    case 'BCA': $rek = '123-456-7890'; break;
+                                    case 'BRI': $rek = '0000-01-000000-50-0'; break;
+                                    case 'MANDIRI': $rek = '100-00-0000000-0'; break;
+                                    case 'DANA': $rek = '0812-3456-7890'; $nama = 'Admin Juragan'; break;
+                                    case 'GOPAY': $rek = '0812-3456-7890'; $nama = 'Admin Juragan'; break;
+                                    default: $rek = 'Hubungi Admin';
+                                }
+                            @endphp
+                            <p class="font-mono font-bold text-lg text-gray-800" id="rekNumber">{{ $rek }}</p>
+                            <p class="text-xs text-gray-500">a.n {{ $nama }}</p>
+                        </div>
+                    </div>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('rekNumber').innerText); alert('No Rekening disalin!')" class="text-gray-400 hover:text-green-600">
+                        <i class="fa-regular fa-copy text-xl"></i>
+                    </button>
                 </div>
+            </div>
 
-            @elseif($transaction->status == 'paid')
-                <div class="text-center py-6">
-                    <div class="inline-block p-4 rounded-full bg-blue-50 mb-3">
-                        <i class="fa-solid fa-file-invoice text-blue-500 text-3xl"></i>
-                    </div>
-                    <p class="text-gray-800 font-bold text-lg">Bukti Sedang Dicek</p>
-                    <p class="text-sm text-gray-500 mb-6">Terima kasih! Pemilik kos akan memverifikasi pembayaran Anda dalam 1x24 jam.</p>
+            <div class="p-6">
+                <h3 class="font-bold text-gray-800 mb-4">Upload Bukti Transfer</h3>
+                
+                <form action="{{ route('booking.update', $transaction->code) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
                     
-                    <a href="{{ route('home') }}" class="block w-full bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">
-                        Kembali ke Beranda
-                    </a>
-                </div>
-
-            @else
-                <div class="text-center py-6">
-                    <div class="inline-block p-4 rounded-full bg-green-50 mb-3">
-                        <i class="fa-solid fa-key text-green-500 text-3xl"></i>
+                    <div class="mb-4">
+                        <label class="block w-full border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 hover:border-green-400 transition cursor-pointer">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-500">Klik untuk upload bukti (JPG/PNG)</p>
+                            <input type="file" name="payment_proof" class="hidden" onchange="document.querySelector('.text-gray-500').textContent = this.files[0].name">
+                        </label>
                     </div>
-                    <p class="text-gray-800 font-bold text-lg">Pembayaran Diterima!</p>
-                    <p class="text-sm text-gray-500 mb-6">Selamat ngekos! Kunci kamar bisa diambil di lokasi.</p>
-                    
-                    <a href="{{ route('home') }}" class="block w-full bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-700 transition">
-                        Cari Kos Lain
-                    </a>
-                </div>
-            @endif
 
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-lg shadow-green-200">
+                        Konfirmasi Pembayaran
+                    </button>
+                </form>
+            </div>
         </div>
-    </div>
+        
+        <div class="text-center mt-6">
+            <a href="{{ route('home') }}" class="text-gray-500 text-sm hover:underline">Bayar Nanti (Kembali ke Home)</a>
+        </div>
+
+    </main>
+
 </body>
 </html>

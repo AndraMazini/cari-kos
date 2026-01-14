@@ -19,7 +19,8 @@
                     <i class="fa-solid fa-arrow-left mr-2"></i> Kembali
                 </a>
                 <div class="font-bold text-lg text-gray-800">Detail Kos</div>
-                <div class="w-20"></div> </div>
+                <div class="w-20"></div> 
+            </div>
         </div>
     </nav>
 
@@ -94,7 +95,7 @@
         </div>
 
         <h2 class="text-xl font-bold text-gray-800 mb-4">Pilihan Kamar</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
             @forelse($kos->rooms as $room)
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-green-400 transition">
                 <div class="flex justify-between items-start mb-2">
@@ -122,6 +123,107 @@
                 <p class="text-gray-500">Belum ada tipe kamar yang tersedia.</p>
             </div>
             @endforelse
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100" id="reviews">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Ulasan Penyewa</h2>
+            
+            @if(session('error'))
+                <div class="bg-red-50 text-red-600 p-4 rounded-lg mb-6 border border-red-100 text-sm">
+                    <i class="fa-solid fa-circle-exclamation mr-2"></i> {{ session('error') }}
+                </div>
+            @endif
+            @if(session('success'))
+                <div class="bg-green-50 text-green-600 p-4 rounded-lg mb-6 border border-green-100 text-sm">
+                    <i class="fa-solid fa-check-circle mr-2"></i> {{ session('success') }}
+                </div>
+            @endif
+
+            @auth
+                @if(Auth::user()->role == 'penyewa')
+                <form action="{{ route('review.store', $kos->slug) }}" method="POST" class="mb-10 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    @csrf
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-regular fa-pen-to-square mr-2"></i> Tulis Pengalamanmu
+                    </h3>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-gray-600 mb-2">Beri Rating</label>
+                        <div class="flex flex-row-reverse justify-end gap-2">
+                            <div class="flex gap-2 sm:gap-4">
+                                <label class="cursor-pointer flex items-center gap-1 bg-white border px-3 py-1 rounded hover:border-green-500 has-[:checked]:bg-green-50 has-[:checked]:border-green-500 has-[:checked]:text-green-600 transition">
+                                    <input type="radio" name="rating" value="5" class="accent-green-600" checked> 
+                                    <span class="font-bold text-sm">5</span> <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+                                </label>
+                                <label class="cursor-pointer flex items-center gap-1 bg-white border px-3 py-1 rounded hover:border-green-500 has-[:checked]:bg-green-50 has-[:checked]:border-green-500 has-[:checked]:text-green-600 transition">
+                                    <input type="radio" name="rating" value="4" class="accent-green-600"> 
+                                    <span class="font-bold text-sm">4</span> <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+                                </label>
+                                <label class="cursor-pointer flex items-center gap-1 bg-white border px-3 py-1 rounded hover:border-green-500 has-[:checked]:bg-green-50 has-[:checked]:border-green-500 has-[:checked]:text-green-600 transition">
+                                    <input type="radio" name="rating" value="3" class="accent-green-600"> 
+                                    <span class="font-bold text-sm">3</span> <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+                                </label>
+                                <label class="cursor-pointer flex items-center gap-1 bg-white border px-3 py-1 rounded hover:border-green-500 has-[:checked]:bg-green-50 has-[:checked]:border-green-500 has-[:checked]:text-green-600 transition">
+                                    <input type="radio" name="rating" value="2" class="accent-green-600"> 
+                                    <span class="font-bold text-sm">2</span> <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+                                </label>
+                                <label class="cursor-pointer flex items-center gap-1 bg-white border px-3 py-1 rounded hover:border-green-500 has-[:checked]:bg-green-50 has-[:checked]:border-green-500 has-[:checked]:text-green-600 transition">
+                                    <input type="radio" name="rating" value="1" class="accent-green-600"> 
+                                    <span class="font-bold text-sm">1</span> <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-gray-600 mb-2">Ceritakan detailnya</label>
+                        <textarea name="comment" rows="3" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm" placeholder="Bagaimana fasilitasnya? Apakah bersih? Lingkungannya nyaman?"></textarea>
+                    </div>
+
+                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition shadow-lg shadow-green-100 text-sm">
+                        Kirim Ulasan
+                    </button>
+                </form>
+                @endif
+            @endauth
+
+            <div class="space-y-6">
+                @forelse($kos->reviews()->latest()->get() as $review)
+                    <div class="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center text-sm font-bold text-green-700 border border-white shadow-sm">
+                                    {{ substr($review->user->name, 0, 1) }}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm">{{ $review->user->name }}</p>
+                                    <div class="flex items-center gap-1">
+                                        @for($i=1; $i<=5; $i++)
+                                            <i class="fa-solid fa-star text-[10px] {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-200' }}"></i>
+                                        @endfor
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="text-xs text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded">
+                                {{ $review->created_at->diffForHumans() }}
+                            </span>
+                        </div>
+                        <p class="text-gray-600 text-sm leading-relaxed pl-[52px]">
+                            "{{ $review->comment }}"
+                        </p>
+                    </div>
+                @empty
+                    <div class="text-center py-8">
+                        <div class="inline-block p-3 bg-gray-50 rounded-full mb-3">
+                            <i class="fa-regular fa-comment-dots text-gray-300 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 text-sm">Belum ada ulasan untuk kos ini.</p>
+                        @guest
+                            <p class="text-xs text-gray-400 mt-1">Login untuk memberikan ulasan jika Anda pernah menyewa di sini.</p>
+                        @endguest
+                    </div>
+                @endforelse
+            </div>
         </div>
 
     </main>

@@ -6,56 +6,62 @@ use Illuminate\Http\Request;
 use App\Models\BoardingHouse;
 use App\Models\Room;
 use App\Models\Transaction;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
-    // 1. Menampilkan Halaman Form Booking
+    // Halaman Form Booking
     public function create($slug, Room $room)
     {
         $kos = BoardingHouse::where('slug', $slug)->firstOrFail();
         return view('booking.create', compact('kos', 'room'));
     }
 
-    // 2. Menyimpan Data Transaksi Baru
+    // Proses Simpan Transaksi
     public function store(Request $request, $slug, Room $room)
     {
         $request->validate([
-            'start_date'     => 'required|date',
+            'start_date'     => 'required|date|after_or_equal:today',
             'duration'       => 'required|integer|min:1|max:12',
-            'payment_method' => 'required|string',
+            // Validasi metode pembayaran yang diizinkan
+            'payment_method' => 'required|in:BCA,BRI,MANDIRI,DANA,GOPAY', 
         ]);
 
+        $kos = BoardingHouse::where('slug', $slug)->firstOrFail();
+        
         // Hitung total harga
         $totalAmount = $room->price_per_month * $request->duration;
 
-        // Simpan Transaksi
+        // Buat Kode Transaksi Unik (TRX-ANGKAACAK)
+        $code = 'TRX-' . mt_rand(10000, 99999);
+
         $transaction = Transaction::create([
-            'code'           => 'TRX-' . mt_rand(10000, 99999),
-            'user_id'        => Auth::id() ?? 1, // Default user ID 1 (karena belum login)
-            'room_id'        => $room->id,
-            'start_date'     => $request->start_date,
-            'duration'       => $request->duration,
-            'total_amount'   => $totalAmount,
-            'payment_method' => $request->payment_method,
-            'status'         => 'pending',
+            'code'              => $code,
+            'user_id'           => Auth::id(),
+            'room_id'           => $room->id,
+            'start_date'        => $request->start_date,
+            'duration'          => $request->duration,
+            'total_amount'      => $totalAmount,
+            'payment_method'    => $request->payment_method, // Simpan Pilihan User
+            'status'            => 'pending',
         ]);
 
+        // Redirect ke halaman pembayaran
         return redirect()->route('booking.payment', $transaction->code);
     }
 
-    // 3. Menampilkan Halaman Pembayaran / Status
+    // Halaman Pembayaran & Upload Bukti
     public function payment($code)
     {
-        $transaction = Transaction::with(['room.boardingHouse', 'user'])
-                        ->where('code', $code)
+        $transaction = Transaction::where('code', $code)
+                        ->with(['user', 'room.boardingHouse'])
                         ->firstOrFail();
 
         return view('booking.payment', compact('transaction'));
     }
 
-    // 4. Memproses Upload Bukti Pembayaran
+    // Proses Upload Bukti Bayar
     public function update(Request $request, $code)
     {
         $transaction = Transaction::where('code', $code)->firstOrFail();
@@ -69,24 +75,20 @@ class TransactionController extends Controller
             
             $transaction->update([
                 'payment_proof' => $path,
-                'status' => 'paid' // Ubah status jadi paid (menunggu konfirmasi admin)
+                'status'        => 'paid' // Ubah status jadi 'paid' (menunggu verifikasi admin)
             ]);
         }
 
-        return redirect()->route('booking.payment', $transaction->code)
-            ->with('success', 'Bukti pembayaran berhasil dikirim!');
+        return redirect()->route('booking.history')->with('success', 'Bukti pembayaran berhasil diupload! Tunggu konfirmasi admin.');
     }
 
-    // 5. Menampilkan Riwayat Transaksi User (BARU)
+    // Halaman Riwayat Booking
     public function history()
     {
-        // Ambil transaksi milik user yang sedang login (User ID 1 untuk testing)
-        $userId = Auth::id() ?? 1;
-
         $transactions = Transaction::with(['room.boardingHouse'])
-                        ->where('user_id', $userId)
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+                            ->where('user_id', Auth::id())
+                            ->latest()
+                            ->get();
 
         return view('booking.history', compact('transactions'));
     }

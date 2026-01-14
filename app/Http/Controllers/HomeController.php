@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\BoardingHouse;
-use App\Models\City; // Tambahkan ini
+use App\Models\City;
 
 class HomeController extends Controller
 {
@@ -13,14 +13,14 @@ class HomeController extends Controller
         // 1. Ambil data kota untuk dropdown filter
         $cities = City::all();
 
-        // 2. Mulai Query dengan Eager Loading & Count Rooms
-        // withCount('rooms') akan otomatis membuat properti 'rooms_count'
+        // 2. Mulai Query
         $query = BoardingHouse::with(['city', 'facilities'])
                   ->withCount(['rooms' => function ($query) {
-                      $query->where('is_available', true); // Hitung cuma kamar yang tersedia
-                  }]);
+                      $query->where('is_available', true); 
+                  }])
+                  ->withAvg('reviews', 'rating'); // Hitung rata-rata rating review
 
-        // 3. Logika Pencarian (Keyword)
+        // 3. Filter Pencarian (Keyword)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -32,17 +32,18 @@ class HomeController extends Controller
             });
         }
 
-        // 4. Logika Filter Kota
+        // 4. Filter Kota
+        // Kita standarisasi menggunakan 'city_id' agar konsisten
         if ($request->filled('city_id')) {
             $query->where('city_id', $request->city_id);
         }
 
-        // 5. Logika Filter Kategori (Putra/Putri)
+        // 5. Filter Kategori
         if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
-        // 6. Logika Sorting Harga
+        // 6. Sorting
         if ($request->filled('sort')) {
             if ($request->sort == 'lowest') {
                 $query->orderBy('price_start_from', 'asc');
@@ -50,20 +51,20 @@ class HomeController extends Controller
                 $query->orderBy('price_start_from', 'desc');
             }
         } else {
-            // Default urutkan dari yang terbaru
             $query->orderBy('created_at', 'desc');
         }
 
-        // 7. Eksekusi
-        $kosList = $query->get();
+        // 7. Ambil Data dengan Pagination (8 per halaman)
+        $kosList = $query->paginate(8);
 
         return view('home', compact('kosList', 'cities'));
     }
 
     public function show($slug)
     {
+        // Ambil data kos beserta review dan usernya untuk detail page
         $kos = BoardingHouse::where('slug', $slug)
-                ->with(['city', 'rooms', 'facilities', 'user'])
+                ->with(['city', 'rooms', 'facilities', 'user', 'reviews.user'])
                 ->firstOrFail();
 
         return view('kos.show', compact('kos'));

@@ -8,14 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
-        /* Hilangkan scrollbar default untuk tampilan mobile yang lebih bersih */
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -35,6 +29,7 @@
                     <form action="{{ route('home') }}" method="GET" class="w-full max-w-lg relative hidden md:block">
                         @if(request('category')) <input type="hidden" name="category" value="{{ request('category') }}"> @endif
                         @if(request('sort')) <input type="hidden" name="sort" value="{{ request('sort') }}"> @endif
+                        @if(request('city_id')) <input type="hidden" name="city_id" value="{{ request('city_id') }}"> @endif
 
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
@@ -77,20 +72,30 @@
                                 @endif
                                 
                                 @if(Auth::user()->role == 'pemilik')
+                                    <a href="{{ route('owner.dashboard') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
+                                        <i class="fa-solid fa-chart-line mr-3 w-5 text-center text-gray-400"></i> Dashboard Juragan
+                                    </a>
                                     <a href="{{ route('owner.kos.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
                                         <i class="fa-solid fa-house-laptop mr-3 w-5 text-center text-gray-400"></i> Kelola Kos Saya
+                                    </a>
+                                    <a href="{{ route('owner.transactions.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
+                                        <i class="fa-solid fa-inbox mr-3 w-5 text-center text-gray-400"></i> Pesanan Masuk
                                     </a>
                                 @endif
                                 
                                 @if(Auth::user()->role == 'admin')
                                     <div class="border-t border-gray-100 my-1"></div>
-                                    <a href="{{ route('admin.transactions.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
+                                    <a href="{{ route('admin.dashboard') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
                                         <i class="fa-solid fa-gauge mr-3 w-5 text-center text-gray-400"></i> Dashboard Admin
                                     </a>
                                 @endif
                                 
                                 <div class="border-t border-gray-100 mt-1"></div>
                                 
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
+                                    <i class="fa-solid fa-user-gear mr-3 w-5 text-center text-gray-400"></i> Edit Profil
+                                </a>
+
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button type="submit" class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition rounded-b-xl flex items-center">
@@ -135,37 +140,53 @@
             <h2 class="text-2xl font-bold text-gray-800">
                 @if(request('search'))
                     Hasil Pencarian: "{{ request('search') }}"
-                @elseif(request('category'))
-                    Kategori Kos {{ request('category') }}
+                @elseif(request('city_id'))
+                    @php $cityName = $cities->find(request('city_id'))->name ?? 'Kota Pilihan'; @endphp
+                    Kos di {{ $cityName }}
                 @else
                     Rekomendasi Kos Pilihan
                 @endif
             </h2>
             
-            <div class="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+            <div class="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide items-center">
                 
-                @if(request('category') || request('sort') || request('search'))
+                @if(request()->anyFilled(['category', 'sort', 'search', 'city_id']))
                     <a href="{{ route('home') }}" class="flex items-center gap-2 bg-red-50 border border-red-200 px-4 py-2 rounded-full text-sm font-bold text-red-600 hover:bg-red-100 transition whitespace-nowrap">
                         <i class="fa-solid fa-xmark"></i> Reset
                     </a>
                 @endif
 
+                <form action="{{ route('home') }}" method="GET" class="mr-2">
+                    @if(request('search')) <input type="hidden" name="search" value="{{ request('search') }}"> @endif
+                    @if(request('category')) <input type="hidden" name="category" value="{{ request('category') }}"> @endif
+                    @if(request('sort')) <input type="hidden" name="sort" value="{{ request('sort') }}"> @endif
+                    
+                    <select name="city_id" onchange="this.form.submit()" class="px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer hover:bg-gray-50">
+                        <option value="">📍 Semua Kota</option>
+                        @foreach($cities as $city)
+                            <option value="{{ $city->id }}" {{ request('city_id') == $city->id ? 'selected' : '' }}>
+                                {{ $city->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+
                 <a href="{{ route('home', array_merge(request()->query(), ['sort' => 'lowest'])) }}" 
                    class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap border
                    {{ request('sort') == 'lowest' ? 'bg-green-600 text-white border-green-600 shadow-md shadow-green-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
-                   <i class="fa-solid fa-arrow-down-short-wide"></i> Harga Terendah
+                   <i class="fa-solid fa-arrow-down-short-wide"></i> Termurah
                 </a>
 
                 <a href="{{ route('home', array_merge(request()->query(), ['category' => 'Putri'])) }}" 
                    class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap border
                    {{ request('category') == 'Putri' ? 'bg-pink-600 text-white border-pink-600 shadow-md shadow-pink-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
-                   <i class="fa-solid fa-venus"></i> Kos Putri
+                   <i class="fa-solid fa-venus"></i> Putri
                 </a>
 
                 <a href="{{ route('home', array_merge(request()->query(), ['category' => 'Putra'])) }}" 
                    class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap border
                    {{ request('category') == 'Putra' ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
-                   <i class="fa-solid fa-mars"></i> Kos Putra
+                   <i class="fa-solid fa-mars"></i> Putra
                 </a>
             </div>
         </div>
@@ -191,14 +212,15 @@
                     </div>
 
                     <div class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded font-medium">
-                        <i class="fa-solid fa-door-open mr-1"></i> {{ $kos->rooms->count() }} Tipe Kamar
+                        <i class="fa-solid fa-door-open mr-1"></i> {{ $kos->rooms_count }} Tipe Kamar
                     </div>
                 </div>
 
                 <div class="p-5 flex flex-col flex-grow">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="flex items-center text-xs font-bold text-gray-800 bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">
-                            <i class="fa-solid fa-star text-yellow-400 mr-1"></i> 4.5
+                            <i class="fa-solid fa-star text-yellow-400 mr-1"></i> 
+                            {{ $kos->reviews_avg_rating ? number_format($kos->reviews_avg_rating, 1) : 'Baru' }}
                         </span>
                         <span class="text-xs text-gray-400">•</span>
                         <span class="text-xs text-gray-500 truncate max-w-[150px]">
@@ -252,6 +274,11 @@
             @endforelse
 
         </div>
+
+        <div class="mt-12">
+            {{ $kosList->withQueryString()->links() }}
+        </div>
+
     </main>
 
     <footer class="bg-white border-t border-gray-200 mt-12 py-8">

@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Casts\Attribute; // [PENTING] Import ini wajib ada
 
 class User extends Authenticatable
 {
@@ -18,11 +19,11 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username', // Pastikan username ada jika Anda menggunakannya
         'email',
         'password',
-        'username',      // <-- Tambahkan ini
-        'phone_number',  // <-- Tambahkan ini
-        'role',          // <-- Tambahkan ini
+        'role',          // penyewa, pemilik, admin
+        'phone_number',  // 0812xxxx
     ];
 
     /**
@@ -40,8 +41,37 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
+    // --- ACCESSOR WHATSAPP (BARU) ---
+    // Cara panggil di view: $user->whatsapp_link
+    protected function whatsappLink(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $phone = $this->phone_number;
+                
+                // 1. Hapus karakter aneh (spasi, strip, dll), ambil angka saja
+                $phone = preg_replace('/[^0-9]/', '', $phone);
+
+                // 2. Jika diawali '0', ubah jadi '62'
+                if (substr($phone, 0, 1) === '0') {
+                    $phone = '62' . substr($phone, 1);
+                }
+
+                // 3. Jika belum ada 62 (misal user input 812xxx), tambahkan 62
+                if (substr($phone, 0, 2) !== '62') {
+                    $phone = '62' . $phone;
+                }
+
+                return "https://wa.me/{$phone}";
+            }
+        );
+    }
 }

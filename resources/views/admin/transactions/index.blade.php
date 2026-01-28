@@ -50,8 +50,16 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm font-medium text-gray-900">{{ $trx->user->name ?? 'Guest' }}</div>
-                            <div class="text-sm text-gray-500">{{ $trx->room->name }}</div>
-                            <div class="text-xs text-gray-400">{{ $trx->room->boardingHouse->name }}</div>
+                            
+                            {{-- BAGIAN ANTI ERROR --}}
+                            <div class="text-sm text-gray-500">
+                                {{ $trx->room?->name ?? 'Kamar Dihapus' }}
+                            </div>
+                            <div class="text-xs text-gray-400">
+                                {{ $trx->room?->boardingHouse?->name ?? 'Kos Dihapus' }}
+                            </div>
+                            {{-- ---------------- --}}
+                            
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm font-bold text-green-600">Rp{{ number_format($trx->total_amount, 0, ',', '.') }}</div>
@@ -99,6 +107,14 @@
                 </tbody>
             </table>
         </div>
+        
+        {{-- Pagination (jika ada) --}}
+        @if(method_exists($transactions, 'links'))
+        <div class="mt-4">
+            {{ $transactions->links() }}
+        </div>
+        @endif
+        
     </div>
 
 </body>

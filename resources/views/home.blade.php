@@ -8,14 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
-        /* Hilangkan scrollbar default untuk tampilan mobile yang lebih bersih */
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -70,22 +64,19 @@
                                     <p class="font-bold text-gray-800 truncate">{{ Auth::user()->email }}</p>
                                 </div>
                                 
-                                @if(Auth::user()->role == 'penyewa')
+                                @if(Auth::user()->role == 'penyewa' || Auth::user()->role == 'pencari')
                                     <a href="{{ route('booking.history') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
                                         <i class="fa-solid fa-clock-rotate-left mr-3 w-5 text-center text-gray-400"></i> Riwayat Sewa
                                     </a>
                                 @endif
                                 
-                                @if(Auth::user()->role == 'pemilik')
-                                    <a href="{{ route('owner.kos.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
-                                        <i class="fa-solid fa-house-laptop mr-3 w-5 text-center text-gray-400"></i> Kelola Kos Saya
-                                    </a>
-                                @endif
-                                
-                                @if(Auth::user()->role == 'admin')
+                                @if(Auth::user()->role == 'pemilik' || Auth::user()->role == 'admin')
                                     <div class="border-t border-gray-100 my-1"></div>
-                                    <a href="{{ route('admin.transactions.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition flex items-center">
-                                        <i class="fa-solid fa-gauge mr-3 w-5 text-center text-gray-400"></i> Dashboard Admin
+                                    <a href="{{ route('owner.kos.index') }}" class="block px-4 py-3 text-green-700 hover:bg-green-50 transition flex items-center font-bold">
+                                        <i class="fa-solid fa-house-laptop mr-3 w-5 text-center"></i> Kelola Kos Saya
+                                    </a>
+                                    <a href="{{ route('admin.dashboard') }}" class="block px-4 py-3 text-red-600 hover:bg-red-50 transition flex items-center font-bold">
+                                        <i class="fa-solid fa-user-shield mr-3 w-5 text-center"></i> Halaman Admin
                                     </a>
                                 @endif
                                 
@@ -112,25 +103,6 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <div class="bg-gradient-to-r from-green-600 to-teal-500 rounded-2xl p-6 md:p-10 mb-10 text-white shadow-lg relative overflow-hidden">
-            <div class="relative z-10 flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-4 md:mb-0">
-                    <h2 class="text-3xl font-bold mb-2">Promo Ngebut Awal Tahun!</h2>
-                    <p class="text-green-100">Diskon hingga 50% untuk pembayaran pertama di kos pilihan.</p>
-                </div>
-                <div class="flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/30">
-                    <span class="text-xs font-medium uppercase tracking-wider hidden sm:block">Berakhir dalam:</span>
-                    <div class="flex gap-2 font-mono font-bold text-xl">
-                        <span class="bg-white text-green-600 px-2 py-1 rounded shadow">03</span> :
-                        <span class="bg-white text-green-600 px-2 py-1 rounded shadow">16</span> :
-                        <span class="bg-white text-green-600 px-2 py-1 rounded shadow">45</span>
-                    </div>
-                </div>
-            </div>
-            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
-            <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-yellow-300 opacity-20 rounded-full blur-2xl"></div>
-        </div>
-
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <h2 class="text-2xl font-bold text-gray-800">
                 @if(request('search'))
@@ -143,7 +115,6 @@
             </h2>
             
             <div class="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-                
                 @if(request('category') || request('sort') || request('search'))
                     <a href="{{ route('home') }}" class="flex items-center gap-2 bg-red-50 border border-red-200 px-4 py-2 rounded-full text-sm font-bold text-red-600 hover:bg-red-100 transition whitespace-nowrap">
                         <i class="fa-solid fa-xmark"></i> Reset
@@ -173,17 +144,24 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             
             @forelse($kosList as $kos)
+
+            {{-- SAYA SUDAH MENGHAPUS FILTER STRICT DISINI --}}
+            {{-- SEKARANG DATA AKAN TETAP MUNCUL MESKI GAMBAR KOSONG --}}
+
             <a href="{{ route('kos.show', $kos->slug) }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer h-full flex flex-col">
                 
                 <div class="relative h-48 bg-gray-200 overflow-hidden">
-                    <img src="{{ $kos->thumbnail ? asset('storage/'.$kos->thumbnail) : 'https://placehold.co/600x400?text=No+Image' }}" 
+                    
+                    {{-- Ganti URL gambar jika error/kosong --}}
+                    <img src="{{ asset('storage/'.$kos->thumbnail) }}" 
                          alt="{{ $kos->name }}" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=No+Image';"
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                     
                     <div class="absolute top-3 left-3">
                         @php
                             $catColor = $kos->category == 'Putri' ? 'text-pink-600 bg-pink-50 border-pink-200' : 
-                                       ($kos->category == 'Putra' ? 'text-blue-600 bg-blue-50 border-blue-200' : 'text-purple-600 bg-purple-50 border-purple-200');
+                                    ($kos->category == 'Putra' ? 'text-blue-600 bg-blue-50 border-blue-200' : 'text-purple-600 bg-purple-50 border-purple-200');
                         @endphp
                         <span class="{{ $catColor }} text-[10px] font-bold px-2 py-1 rounded border shadow-sm uppercase tracking-wide">
                             {{ $kos->category }}
@@ -196,12 +174,9 @@
                 </div>
 
                 <div class="p-5 flex flex-col flex-grow">
+                    
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="flex items-center text-xs font-bold text-gray-800 bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">
-                            <i class="fa-solid fa-star text-yellow-400 mr-1"></i> 4.5
-                        </span>
-                        <span class="text-xs text-gray-400">•</span>
-                        <span class="text-xs text-gray-500 truncate max-w-[150px]">
+                        <span class="text-xs text-gray-500 truncate max-w-[200px]">
                             <i class="fa-solid fa-location-dot text-red-400 mr-1"></i>{{ $kos->city ? $kos->city->name : 'Kota Tidak Ada' }}
                         </span>
                     </div>

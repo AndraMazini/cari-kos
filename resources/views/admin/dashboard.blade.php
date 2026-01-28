@@ -96,7 +96,12 @@
                         @forelse($recentTransactions as $trx)
                         <tr class="border-b hover:bg-gray-50 transition">
                             <td class="px-6 py-4 font-bold">{{ $trx->user->name }}</td>
-                            <td class="px-6 py-4">{{ $trx->room->boardingHouse->name }}</td>
+                            
+                            {{-- BAGIAN INI SUDAH DIPERBAIKI (ANTI ERROR) --}}
+                            <td class="px-6 py-4">
+                                {{ $trx->room?->boardingHouse?->name ?? 'Data Terhapus' }}
+                            </td>
+                            
                             <td class="px-6 py-4">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</td>
                             <td class="px-6 py-4">
                                 <span class="px-2 py-1 rounded text-xs font-bold {{ $trx->status == 'approved' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700' }}">

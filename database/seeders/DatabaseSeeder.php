@@ -10,12 +10,44 @@ use App\Models\BoardingHouse;
 use App\Models\Room;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File; // Tambahan untuk handle file
 
 class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Buat User ADMIN (Real Admin untuk Dashboard)
+        // --- BAGIAN INI AKAN DOWNLOAD GAMBAR OTOMATIS ---
+        $this->command->info('Sedang menyiapkan gambar dummy...');
+        
+        // Pastikan folder penyimpanan ada
+        $path = public_path('storage');
+        if (!File::exists($path)) {
+            File::makeDirectory($path, 0755, true);
+        }
+
+        // Cek apakah gambar sudah ada? Kalau belum, DOWNLOAD
+        $imagePath = public_path('storage/kos_default.jpg');
+        
+        // Kita paksa download ulang biar pasti ada
+        try {
+            // URL Gambar Dummy (Hijau biar sesuai tema)
+            $imageUrl = 'https://placehold.co/600x400/22c55e/ffffff.jpg?text=Kos+Nyaman';
+            
+            // Download gambar
+            $content = file_get_contents($imageUrl);
+            
+            if ($content !== false) {
+                file_put_contents($imagePath, $content);
+                $this->command->info('✅ Berhasil mendownload gambar kos_default.jpg');
+            } else {
+                $this->command->error('Gagal download gambar. Pastikan internet nyala.');
+            }
+        } catch (\Exception $e) {
+            $this->command->warn('Gagal koneksi internet: ' . $e->getMessage());
+        }
+        // -----------------------------------------------------
+
+        // 1. Buat User
         User::create([
             'name' => 'Super Admin',
             'username' => 'superadmin',
@@ -25,7 +57,6 @@ class DatabaseSeeder extends Seeder
             'phone_number' => '08000000000',
         ]);
 
-        // 2. Buat User Pemilik Kos
         $owner = User::create([
             'name' => 'Juragan Kos',
             'username' => 'juragankos',
@@ -35,7 +66,6 @@ class DatabaseSeeder extends Seeder
             'phone_number' => '081234567890',
         ]);
 
-        // 3. Buat User Pencari Kos
         User::create([
             'name' => 'Anak Rantau',
             'username' => 'anakrantau',
@@ -45,8 +75,8 @@ class DatabaseSeeder extends Seeder
             'phone_number' => '08987654321',
         ]);
 
-        // 4. Buat Data Kota
-        $cities = [
+        // 2. Buat Kota
+        $citiesData = [
             ['name' => 'Jakarta', 'slug' => 'jakarta'],
             ['name' => 'Bandung', 'slug' => 'bandung'],
             ['name' => 'Yogyakarta', 'slug' => 'yogyakarta'],
@@ -54,61 +84,54 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Malang', 'slug' => 'malang'],
         ];
 
-        foreach ($cities as $city) {
+        foreach ($citiesData as $city) {
             City::create($city);
         }
 
-        // 5. Buat Data Fasilitas
-        $facilities = [
-            'WiFi', 'AC', 'Kamar Mandi Dalam', 'Kasur', 'Lemari', 
-            'Meja Belajar', 'Parkir Motor', 'Parkir Mobil', 'Dapur Umum'
-        ];
-        
+        // 3. Buat Fasilitas
+        $facilities = ['WiFi', 'AC', 'Kamar Mandi Dalam', 'Kasur', 'Lemari', 'Parkir', 'TV'];
         $facilityIds = [];
         foreach ($facilities as $f) {
-            $fac = Facility::create([
-                'name' => $f,
-                'icon' => 'fa-solid fa-check'
-            ]);
+            $fac = Facility::create(['name' => $f, 'icon' => 'fa-solid fa-check']);
             $facilityIds[] = $fac->id;
         }
 
-        // 6. Buat Dummy Boarding House
+        // 4. Buat 20 Kos Dummy
         $kosNames = [
             'Kost Griya Melati', 'Kost Dago Asri', 'Kost Putri Sakinah', 
             'Apartemen Siswa', 'Kost Eksklusif Menteng', 'Wisma Mahasiswa', 
-            'Kost Orange Jeruk', 'Pavilion Garden'
+            'Kost Orange Jeruk', 'Pavilion Garden', 'Kost Bintang Lima',
+            'Kost Hijau Daun', 'Kost Biru Langit', 'Kost Mawar Merah',
+            'Pondok Indah Kapuk', 'Kost Sejahtera', 'Kost Bahagia',
+            'Kost Murah Meriah', 'Kost Executive', 'Kost Nyaman',
+            'Kost Strategis', 'Kost Pusat Kota'
         ];
 
-        foreach ($kosNames as $index => $name) {
+        foreach ($kosNames as $name) {
             $city = City::inRandomOrder()->first();
-            $category = collect(['Putra', 'Putri', 'Campur'])->random();
+            $basePrice = rand(5, 30) * 100000;
 
             $kos = BoardingHouse::create([
                 'name' => $name,
                 'slug' => Str::slug($name) . '-' . Str::random(5),
                 'user_id' => $owner->id, 
                 'city_id' => $city->id,
-                'address' => 'Jl. ' . $name . ' No. ' . rand(1, 100) . ', ' . $city->name,
-                'category' => $category,
-                'description' => 'Kos nyaman, aman, dan strategis dekat kampus.',
-                'price_start_from' => rand(5, 25) * 100000,
-                'thumbnail' => null,
+                'address' => 'Jl. ' . $name . ' No. ' . rand(1, 100),
+                'category' => collect(['Putra', 'Putri', 'Campur'])->random(),
+                'description' => 'Fasilitas lengkap, aman, dan nyaman.',
+                'price_start_from' => $basePrice,
+                // PENTING: Menggunakan nama file yang tadi didownload otomatis
+                'thumbnail' => 'kos_default.jpg', 
             ]);
 
-            // Attach Fasilitas
-            if (!empty($facilityIds)) {
-                $randomFacilities = collect($facilityIds)->random(min(count($facilityIds), rand(3, 5)));
-                $kos->facilities()->attach($randomFacilities);
-            }
+            $kos->facilities()->attach(collect($facilityIds)->random(3));
 
-            // 7. Buat Kamar
-            for ($i = 1; $i <= rand(2, 4); $i++) {
+            for ($i = 1; $i <= 2; $i++) {
                 Room::create([
                     'boarding_house_id' => $kos->id,
-                    'name' => 'Kamar Tipe ' . chr(64 + $i),
-                    'size' => '3x4 meter',
-                    'price_per_month' => $kos->price_start_from + ($i * 100000),
+                    'name' => 'Tipe ' . chr(64 + $i),
+                    'size' => '3x4m',
+                    'price_per_month' => $basePrice,
                     'is_available' => true,
                 ]);
             }

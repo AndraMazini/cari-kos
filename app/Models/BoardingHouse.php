@@ -9,7 +9,8 @@ class BoardingHouse extends Model
 {
     use HasFactory;
 
-    protected $guarded = []; // Izinkan semua kolom diisi
+    // Menggunakan guarded kosong agar semua kolom bisa diisi (mass assignment)
+    protected $guarded = [];
 
     // Relasi ke Kota
     public function city()
@@ -17,21 +18,36 @@ class BoardingHouse extends Model
         return $this->belongsTo(City::class);
     }
 
-    // Relasi ke Pemilik
+    // Relasi ke Pemilik (User)
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke Kamar
+    // Relasi ke Kamar-kamar yang tersedia di kos ini
     public function rooms()
     {
         return $this->hasMany(Room::class);
     }
 
-    // Relasi ke Fasilitas (Many to Many)
+    // Relasi ke Fasilitas (Many-to-Many)
     public function facilities()
     {
         return $this->belongsToMany(Facility::class, 'boarding_house_facilities');
+    }
+
+    // Relasi ke Review dari penyewa
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Helper: Menghitung rata-rata rating untuk tampilan IMK
+     * Agar user bisa melihat bintang kos di halaman utama
+     */
+    public function averageRating()
+    {
+        return $this->reviews()->avg('rating') ?: 0;
     }
 }

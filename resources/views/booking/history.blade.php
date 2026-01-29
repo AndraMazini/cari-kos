@@ -37,7 +37,7 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition duration-300">
                     <div class="flex flex-col sm:flex-row gap-4">
                         
-                        {{-- 1. BAGIAN GAMBAR (DIPERBAIKI) --}}
+                        {{-- 1. BAGIAN GAMBAR --}}
                         <img src="{{ $trx->room?->boardingHouse?->thumbnail ? asset('storage/'.$trx->room->boardingHouse->thumbnail) : 'https://placehold.co/150?text=Kos+Dihapus' }}" 
                              alt="Foto Kos"
                              class="w-full sm:w-32 h-32 object-cover rounded-lg bg-gray-200">
@@ -46,12 +46,12 @@
                             <div>
                                 <div class="flex justify-between items-start mb-2">
                                     <div>
-                                        {{-- 2. BAGIAN NAMA KOS (DIPERBAIKI) --}}
+                                        {{-- 2. BAGIAN NAMA KOS --}}
                                         <h3 class="font-bold text-gray-800 text-lg leading-tight">
                                             {{ $trx->room?->boardingHouse?->name ?? 'Data Kos Telah Dihapus' }}
                                         </h3>
                                         
-                                        {{-- 3. BAGIAN NAMA KAMAR (DIPERBAIKI) --}}
+                                        {{-- 3. BAGIAN NAMA KAMAR --}}
                                         <p class="text-sm text-gray-500 mt-1">
                                             <i class="fa-solid fa-bed mr-1"></i> 
                                             {{ $trx->room?->name ?? 'Kamar Tidak Tersedia' }}
@@ -59,19 +59,28 @@
                                     </div>
                                     
                                     {{-- STATUS BADGE --}}
-                                    @if($trx->status == 'pending')
-                                        <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded font-bold uppercase">Menunggu Bayar</span>
-                                    @elseif($trx->status == 'paid')
-                                        <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">Menunggu Konfirmasi</span>
-                                    @elseif($trx->status == 'approved')
-                                        <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold uppercase">Disewa</span>
-                                    @elseif($trx->status == 'rejected')
-                                        <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">Ditolak</span>
-                                    @endif
+                                    @php
+                                        $statusClasses = [
+                                            'pending' => 'bg-yellow-100 text-yellow-700',
+                                            'paid' => 'bg-blue-100 text-blue-700',
+                                            'approved' => 'bg-green-100 text-green-700',
+                                            'rejected' => 'bg-red-100 text-red-700',
+                                        ];
+                                        $statusLabels = [
+                                            'pending' => 'Menunggu Bayar',
+                                            'paid' => 'Menunggu Konfirmasi',
+                                            'approved' => 'Disewa',
+                                            'rejected' => 'Ditolak',
+                                        ];
+                                    @endphp
+                                    <span class="{{ $statusClasses[$trx->status] ?? 'bg-gray-100' }} text-xs px-2 py-1 rounded font-bold uppercase">
+                                        {{ $statusLabels[$trx->status] ?? $trx->status }}
+                                    </span>
                                 </div>
                                 
                                 <div class="text-sm text-gray-500 mb-2">
-                                    <i class="fa-regular fa-calendar mr-1"></i> {{ \Carbon\Carbon::parse($trx->start_date)->translatedFormat('d M Y') }} 
+                                    <i class="fa-regular fa-calendar mr-1"></i> 
+                                    {{ \Carbon\Carbon::parse($trx->start_date)->translatedFormat('d M Y') }} 
                                     s/d 
                                     {{ \Carbon\Carbon::parse($trx->start_date)->addMonths($trx->duration)->translatedFormat('d M Y') }}
                                     <span class="bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded ml-2">
@@ -86,9 +95,11 @@
                                     <p class="font-bold text-green-600 text-lg">Rp{{ number_format($trx->total_amount, 0, ',', '.') }}</p>
                                 </div>
 
-                                {{-- TOMBOL BAYAR (Hanya muncul jika status PENDING dan KOS MASIH ADA) --}}
+                                {{-- TOMBOL BAYAR (DIPERBAIKI) --}}
                                 @if($trx->status == 'pending' && $trx->room)
-                                    <a href="{{ route('booking.payment', $trx->transaction_code) }}" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition shadow-lg shadow-green-100">
+                                    {{-- Gunakan array untuk parameter 'code' dan berikan fallback ID jika transaction_code null --}}
+                                    <a href="{{ route('booking.payment', ['code' => $trx->transaction_code ?? $trx->id]) }}" 
+                                       class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition shadow-lg shadow-green-100">
                                         Bayar Sekarang
                                     </a>
                                 @elseif($trx->status == 'pending' && !$trx->room)

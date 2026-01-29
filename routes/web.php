@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminMasterController;
 use App\Http\Controllers\OwnerKosController;
 use App\Http\Controllers\OwnerRoomController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ReviewController; // 1. IMPORT REVIEW CONTROLLER
 
 // --- Halaman Publik ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -24,6 +25,9 @@ Route::middleware('guest')->group(function () {
 // --- Rute Authenticated (Sudah Login) ---
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // 2. RUTE REVIEW (Bisa diakses semua role yang sudah login)
+    Route::post('/review/{boardingHouseId}', [ReviewController::class, 'store'])->name('review.store');
 
     // --- ADMIN AREA ---
     Route::prefix('admin')->middleware('role:admin')->group(function () {
@@ -50,18 +54,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/my-kos', [OwnerKosController::class, 'index'])->name('owner.kos.index');
         Route::get('/my-kos/create', [OwnerKosController::class, 'create'])->name('owner.kos.create');
         Route::post('/my-kos', [OwnerKosController::class, 'store'])->name('owner.kos.store');
-        // Tambahan (Edit & Delete Kos):
+        
         Route::get('/my-kos/{id}/edit', [OwnerKosController::class, 'edit'])->name('owner.kos.edit'); 
         Route::put('/my-kos/{id}', [OwnerKosController::class, 'update'])->name('owner.kos.update');
         Route::delete('/my-kos/{id}', [OwnerKosController::class, 'destroy'])->name('owner.kos.destroy');
 
         // 2. MANAJEMEN KAMAR (LENGKAP CRUD)
-        // List & Create
         Route::get('/my-kos/{slug}/rooms', [OwnerRoomController::class, 'index'])->name('owner.rooms.index');
         Route::get('/my-kos/{slug}/rooms/create', [OwnerRoomController::class, 'create'])->name('owner.rooms.create');
         Route::post('/my-kos/{slug}/rooms', [OwnerRoomController::class, 'store'])->name('owner.rooms.store');
         
-        // Tambahan (Edit & Delete Rooms) - INI YANG BIKIN ERROR TADI
         Route::get('/my-kos/{slug}/rooms/{room}/edit', [OwnerRoomController::class, 'edit'])->name('owner.rooms.edit');
         Route::put('/my-kos/{slug}/rooms/{room}', [OwnerRoomController::class, 'update'])->name('owner.rooms.update');
         Route::delete('/my-kos/{slug}/rooms/{room}', [OwnerRoomController::class, 'destroy'])->name('owner.rooms.destroy');

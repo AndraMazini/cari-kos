@@ -19,7 +19,8 @@
                     <i class="fa-solid fa-arrow-left mr-2"></i> Kembali
                 </a>
                 <div class="font-bold text-lg text-gray-800">Detail Kos</div>
-                <div class="w-20"></div> </div>
+                <div class="w-20"></div> 
+            </div>
         </div>
     </nav>
 
@@ -39,10 +40,17 @@
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                     <div>
                         <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{{ $kos->name }}</h1>
-                        <p class="text-gray-500 flex items-center">
-                            <i class="fa-solid fa-location-dot text-red-500 mr-2"></i> 
-                            {{ $kos->city->name }} - {{ $kos->address }}
-                        </p>
+                        <div class="flex items-center gap-4 text-sm">
+                            <p class="text-gray-500 flex items-center">
+                                <i class="fa-solid fa-location-dot text-red-500 mr-2"></i> 
+                                {{ $kos->city->name }}
+                            </p>
+                            <div class="flex items-center text-yellow-500 font-bold">
+                                <i class="fa-solid fa-star mr-1"></i>
+                                <span>{{ number_format($kos->reviews->avg('rating'), 1) ?? '0.0' }}</span>
+                                <span class="text-gray-400 font-normal ml-1">({{ $kos->reviews->count() }} ulasan)</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="mt-4 md:mt-0 text-right">
                         <p class="text-sm text-gray-500">Mulai dari</p>
@@ -94,7 +102,7 @@
         </div>
 
         <h2 class="text-xl font-bold text-gray-800 mb-4">Pilihan Kamar</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
             @forelse($kos->rooms as $room)
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-green-400 transition">
                 <div class="flex justify-between items-start mb-2">
@@ -109,8 +117,6 @@
                 
                 <div class="flex justify-between items-end mt-4">
                     <p class="font-bold text-green-600">Rp{{ number_format($room->price_per_month, 0, ',', '.') }}<span class="text-xs text-gray-400">/bln</span></p>
-                    
-                    {{-- Tombol Pilih yang mengarah ke Booking --}}
                     <a href="{{ route('booking.create', ['slug' => $kos->slug, 'room' => $room->id]) }}" 
                        class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-green-700 text-center {{ !$room->is_available ? 'opacity-50 pointer-events-none' : '' }}">
                        Pilih
@@ -122,6 +128,72 @@
                 <p class="text-gray-500">Belum ada tipe kamar yang tersedia.</p>
             </div>
             @endforelse
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">Tulis Ulasan</h3>
+                @auth
+                    <form action="{{ route('review.store', $kos->id) }}" method="POST">
+                        @csrf
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-600 mb-1 font-semibold">Rating</label>
+                            <select name="rating" class="w-full p-2 border border-gray-200 rounded-lg text-yellow-500 font-bold focus:ring-2 focus:ring-green-400 outline-none">
+                                <option value="5">⭐⭐⭐⭐⭐ (5.0)</option>
+                                <option value="4">⭐⭐⭐⭐ (4.0)</option>
+                                <option value="3">⭐⭐⭐ (3.0)</option>
+                                <option value="2">⭐⭐ (2.0)</option>
+                                <option value="1">⭐ (1.0)</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-600 mb-1 font-semibold">Komentar</label>
+                            <textarea name="komentar" rows="3" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-400 outline-none" placeholder="Ceritakan pengalamanmu..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 text-white py-2.5 rounded-xl font-bold hover:bg-green-700 transition">
+                            Kirim Ulasan
+                        </button>
+                    </form>
+                @else
+                    <div class="text-center py-4">
+                        <p class="text-sm text-gray-500 mb-3">Login untuk memberikan ulasan</p>
+                        <a href="{{ route('login') }}" class="text-green-600 font-bold border border-green-600 px-4 py-2 rounded-lg hover:bg-green-50">Login Sekarang</a>
+                    </div>
+                @endauth
+            </div>
+
+            <div class="md:col-span-2">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">Ulasan Pengguna</h3>
+                <div class="space-y-4">
+                    @forelse($kos->reviews()->latest()->get() as $review)
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
+                                    {{ substr($review->user->name, 0, 1) }}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm">{{ $review->user->name }}</p>
+                                    <p class="text-xs text-gray-400">{{ $review->created_at->diffForHumans() }}</p>
+                                </div>
+                            </div>
+                            <div class="text-yellow-400 text-xs">
+                                @for($i = 0; $i < $review->rating; $i++)
+                                    <i class="fa-solid fa-star"></i>
+                                @endfor
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            {{ $review->komentar }}
+                        </p>
+                    </div>
+                    @empty
+                    <div class="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                        <p class="text-gray-400 text-sm">Belum ada ulasan untuk kos ini.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
         </div>
 
     </main>

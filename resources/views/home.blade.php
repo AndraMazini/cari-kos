@@ -145,14 +145,9 @@
             
             @forelse($kosList as $kos)
 
-            {{-- SAYA SUDAH MENGHAPUS FILTER STRICT DISINI --}}
-            {{-- SEKARANG DATA AKAN TETAP MUNCUL MESKI GAMBAR KOSONG --}}
-
             <a href="{{ route('kos.show', $kos->slug) }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer h-full flex flex-col">
                 
                 <div class="relative h-48 bg-gray-200 overflow-hidden">
-                    
-                    {{-- Ganti URL gambar jika error/kosong --}}
                     <img src="{{ asset('storage/'.$kos->thumbnail) }}" 
                          alt="{{ $kos->name }}" 
                          onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=No+Image';"
@@ -175,10 +170,22 @@
 
                 <div class="p-5 flex flex-col flex-grow">
                     
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-xs text-gray-500 truncate max-w-[200px]">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-gray-500 truncate max-w-[120px]">
                             <i class="fa-solid fa-location-dot text-red-400 mr-1"></i>{{ $kos->city ? $kos->city->name : 'Kota Tidak Ada' }}
                         </span>
+
+                        <div class="flex items-center gap-1">
+                            <div class="flex text-yellow-400 text-[10px]">
+                                @php 
+                                    $avgRating = $kos->reviews->avg('rating') ?? 0; 
+                                @endphp
+                                @for($i = 1; $i <= 5; $i++)
+                                    <i class="fa-{{ $i <= round($avgRating) ? 'solid' : 'regular' }} fa-star"></i>
+                                @endfor
+                            </div>
+                            <span class="text-[10px] text-gray-400 font-bold">({{ $kos->reviews->count() }})</span>
+                        </div>
                     </div>
 
                     <h3 class="font-bold text-gray-800 text-lg mb-1 leading-snug group-hover:text-green-600 transition-colors line-clamp-2" title="{{ $kos->name }}">

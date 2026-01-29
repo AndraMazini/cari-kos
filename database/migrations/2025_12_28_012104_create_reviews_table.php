@@ -17,8 +17,8 @@ return new class extends Migration
             // Menghubungkan ke penyewa yang memberi review
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             
-            // Menghubungkan ke kos yang di-review
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            // PERBAIKAN: Menghubungkan ke tabel boarding_houses (bukan products)
+            $table->foreignId('boarding_house_id')->constrained('boarding_houses')->onDelete('cascade');
             
             // Menambahkan kolom rating dan komentar
             $table->integer('rating');

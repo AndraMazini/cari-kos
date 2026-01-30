@@ -70,7 +70,7 @@
                             {{ $kos->description }}
                         </p>
 
-                        <h3 class="text-lg font-bold text-gray-800 mb-3">Fasilitas Bersama</h3>
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">Fasilitas Kamar</h3>
                         <div class="flex flex-wrap gap-3 mb-6">
                             @forelse($kos->facilities as $facility)
                                 <span class="bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-sm border border-green-100 flex items-center">

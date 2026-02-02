@@ -43,6 +43,15 @@ class BoardingHouse extends Model
     }
 
     /**
+     * Relasi ke Foto-foto tambahan (Gallery)
+     * SOLUSI: Agar fitur slider di show.blade.php bisa memanggil $kos->images
+     */
+    public function images()
+    {
+        return $this->hasMany(BoardingHouseImage::class);
+    }
+
+    /**
      * Helper: Menghitung rata-rata rating untuk tampilan IMK
      * Agar user bisa melihat bintang kos di halaman utama
      */

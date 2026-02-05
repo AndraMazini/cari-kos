@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Placeholder Configuration
+    |--------------------------------------------------------------------------
+    |
+    | URL ini diambil dari file .env untuk menampilkan gambar default 
+    | jika foto kos tidak ditemukan.
+    |
+    */
+
+    'placeholder_url' => env('KOS_PLACEHOLDER_URL', 'https://placehold.co/600x400?text=No+Image'),
+
 ];

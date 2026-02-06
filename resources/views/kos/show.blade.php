@@ -6,8 +6,12 @@
     <title>{{ $kos->name }} - Cari Kos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+        .swiper-button-next, .swiper-button-prev { color: #16a34a !important; }
+        .swiper-pagination-bullet-active { background: #16a34a !important; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -25,13 +29,36 @@
     </nav>
 
     <main class="max-w-5xl mx-auto px-4 py-8">
-        
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-            <div class="relative h-64 md:h-96 bg-gray-200">
-                <img src="{{ $kos->thumbnail ? asset('storage/'.$kos->thumbnail) : 'https://placehold.co/1200x600?text=Foto+Kos' }}" 
-                     alt="{{ $kos->name }}" 
-                     class="w-full h-full object-cover">
-                <span class="absolute top-4 left-4 bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
+            <div class="swiper mySwiper relative h-64 md:h-96 bg-gray-200">
+                <div class="swiper-wrapper">
+                    {{-- Slide 1: Thumbnail Utama --}}
+                    <div class="swiper-slide">
+                        <img src="{{ $kos->thumbnail ? (Str::startsWith($kos->thumbnail, 'http') ? $kos->thumbnail : asset('storage/'.$kos->thumbnail)) : 'https://placehold.co/1200x600?text=Foto+Kos' }}" 
+                             alt="{{ $kos->name }}" 
+                             class="w-full h-full object-cover">
+                    </div>
+
+                    {{-- Slide Tambahan: Gallery --}}
+                    @if($kos->images && $kos->images->count() > 0)
+                        @foreach($kos->images as $image)
+                            <div class="swiper-slide">
+                                <img src="{{ Str::startsWith($image->image_path, 'http') ? $image->image_path : asset('storage/' . $image->image_path) }}" 
+                                     alt="Foto tambahan {{ $kos->name }}" 
+                                     class="w-full h-full object-cover">
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+
+                {{-- Navigasi muncul hanya jika total gambar > 1 --}}
+                @if($kos->images && $kos->images->count() > 0)
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-pagination"></div>
+                @endif
+
+                <span class="absolute top-4 left-4 bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md z-10">
                     {{ $kos->category }}
                 </span>
             </div>
@@ -66,11 +93,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="md:col-span-2">
                         <h3 class="text-lg font-bold text-gray-800 mb-3">Deskripsi Kos</h3>
-                        <p class="text-gray-600 leading-relaxed mb-6">
-                            {{ $kos->description }}
-                        </p>
+                        <p class="text-gray-600 leading-relaxed mb-6">{{ $kos->description }}</p>
 
-                        <h3 class="text-lg font-bold text-gray-800 mb-3">Fasilitas Bersama</h3>
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">Fasilitas Kamar</h3>
                         <div class="flex flex-wrap gap-3 mb-6">
                             @forelse($kos->facilities as $facility)
                                 <span class="bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-sm border border-green-100 flex items-center">
@@ -107,29 +132,27 @@
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-green-400 transition">
                 <div class="flex justify-between items-start mb-2">
                     <h4 class="font-bold text-lg text-gray-800">{{ $room->name }}</h4>
-                    @if($room->is_available)
-                        <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded font-bold">Tersedia</span>
-                    @else
-                        <span class="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded font-bold">Penuh</span>
-                    @endif
+                    <span class="{{ $room->is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }} text-xs px-2 py-0.5 rounded font-bold">
+                        {{ $room->is_available ? 'Tersedia' : 'Penuh' }}
+                    </span>
                 </div>
                 <p class="text-sm text-gray-500 mb-4"><i class="fa-solid fa-ruler-combined mr-1"></i> Ukuran: {{ $room->size }}</p>
-                
                 <div class="flex justify-between items-end mt-4">
                     <p class="font-bold text-green-600">Rp{{ number_format($room->price_per_month, 0, ',', '.') }}<span class="text-xs text-gray-400">/bln</span></p>
                     <a href="{{ route('booking.create', ['slug' => $kos->slug, 'room' => $room->id]) }}" 
-                       class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-green-700 text-center {{ !$room->is_available ? 'opacity-50 pointer-events-none' : '' }}">
+                       class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-green-700 {{ !$room->is_available ? 'opacity-50 pointer-events-none' : '' }}">
                        Pilih
                     </a>
                 </div>
             </div>
             @empty
             <div class="col-span-full text-center py-8 bg-white rounded-xl border border-dashed border-gray-300">
-                <p class="text-gray-500">Belum ada tipe kamar yang tersedia.</p>
+                <p class="text-gray-500">Belum ada tipe kamar tersedia.</p>
             </div>
             @endforelse
         </div>
 
+        {{-- Section Review --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
                 <h3 class="font-bold text-gray-800 mb-4 text-lg">Tulis Ulasan</h3>
@@ -150,14 +173,12 @@
                             <label class="block text-sm text-gray-600 mb-1 font-semibold">Komentar</label>
                             <textarea name="komentar" rows="3" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-400 outline-none" placeholder="Ceritakan pengalamanmu..."></textarea>
                         </div>
-                        <button type="submit" class="w-full bg-green-600 text-white py-2.5 rounded-xl font-bold hover:bg-green-700 transition">
-                            Kirim Ulasan
-                        </button>
+                        <button type="submit" class="w-full bg-green-600 text-white py-2.5 rounded-xl font-bold hover:bg-green-700 transition">Kirim Ulasan</button>
                     </form>
                 @else
                     <div class="text-center py-4">
-                        <p class="text-sm text-gray-500 mb-3">Login untuk memberikan ulasan</p>
-                        <a href="{{ route('login') }}" class="text-green-600 font-bold border border-green-600 px-4 py-2 rounded-lg hover:bg-green-50">Login Sekarang</a>
+                        <p class="text-sm text-gray-500 mb-3">Login untuk ulasan</p>
+                        <a href="{{ route('login') }}" class="text-green-600 font-bold border border-green-600 px-4 py-2 rounded-lg hover:bg-green-50">Login</a>
                     </div>
                 @endauth
             </div>
@@ -178,29 +199,45 @@
                                 </div>
                             </div>
                             <div class="text-yellow-400 text-xs">
-                                @for($i = 0; $i < $review->rating; $i++)
-                                    <i class="fa-solid fa-star"></i>
-                                @endfor
+                                @for($i = 0; $i < $review->rating; $i++) <i class="fa-solid fa-star"></i> @endfor
                             </div>
                         </div>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            {{ $review->komentar }}
-                        </p>
+                        <p class="text-gray-600 text-sm leading-relaxed">{{ $review->komentar }}</p>
                     </div>
                     @empty
                     <div class="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                        <p class="text-gray-400 text-sm">Belum ada ulasan untuk kos ini.</p>
+                        <p class="text-gray-400 text-sm">Belum ada ulasan.</p>
                     </div>
                     @endforelse
                 </div>
             </div>
         </div>
-
     </main>
 
     <footer class="bg-white border-t mt-12 py-8 text-center text-gray-500 text-sm">
         &copy; {{ date('Y') }} Cari Kos. All rights reserved.
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slideCount = document.querySelectorAll('.swiper-slide').length;
+            
+            var swiper = new Swiper(".mySwiper", {
+                // Matikan fitur jika hanya ada 1 gambar
+                loop: slideCount > 1,
+                watchOverflow: true,
+                autoplay: slideCount > 1 ? { delay: 3000, disableOnInteraction: false } : false,
+                pagination: {
+                    el: ".swiper-pagination",
+                    clickable: true,
+                },
+                navigation: {
+                    nextEl: ".swiper-button-next",
+                    prevEl: ".swiper-button-prev",
+                },
+            });
+        });
+    </script>
 </body>
 </html>
